@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجل متابعة العادات الشهري</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@500;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-dark:#3E2E22;
+    --wood-mid:#6B4F3B;
+    --wood-light:#8A6A4E;
+    --paper:#F3E9D6;
+    --paper-alt:#ECDFC5;
+    --paper-line:#D6C29A;
+    --ink:#2E2418;
+    --ink-soft:#79695A;
+    --stamp:#3F6B4A;
+    --stamp-bg:#DDE9DD;
+    --danger:#8B3A3A;
+    --gold:#A8863F;
+    --radius:10px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:var(--wood-dark);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 42px),
+      linear-gradient(180deg, #4a3626, #382718);
+    font-family:'Cairo', sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:20px 14px 60px;
+  }
+
+  .wrap{max-width:1400px; margin:0 auto;}
+
+  header{
+    text-align:center;
+    padding:22px 10px 26px;
+    color:#F3E9D6;
+  }
+  header h1{
+    font-family:'Markazi Text', serif;
+    font-weight:700;
+    font-size:clamp(30px, 5vw, 46px);
+    margin:0 0 6px;
+    letter-spacing:0.5px;
+  }
+  header p{
+    margin:0;
+    color:#CBB69A;
+    font-size:14px;
+  }
+
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    padding:0 4px;
+  }
+  .month-badge{
+    background:var(--wood-mid);
+    color:#F3E9D6;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+  .add-btn{
+    background:var(--stamp);
+    color:#fff;
+    border:none;
+    padding:10px 20px;
+    border-radius:8px;
+    font-family:'Cairo',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    box-shadow:0 3px 0 #2e4f37;
+    transition:transform .08s ease;
+  }
+  .add-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #2e4f37; }
+
+  .board{
+    background:var(--wood-mid);
+    border-radius:16px;
+    padding:14px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.45), inset 0 0 0 6px rgba(0,0,0,0.12);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+
+  .table-scroll{
+    overflow-x:auto;
+    overflow-y:hidden;
+    border-radius:8px;
+    background:var(--paper);
+    box-shadow:inset 0 0 0 1px var(--paper-line);
+  }
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:1100px;
+    background:var(--paper);
+  }
+
+  thead th{
+    background:var(--wood-dark);
+    color:#F3E9D6;
+    font-weight:600;
+    font-size:13px;
+    padding:10px 6px;
+    border:1px solid #2c2015;
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+  thead th .wk{
+    display:block;
+    font-size:10px;
+    color:#CBB69A;
+    font-weight:400;
+  }
+
+  th.col-habit, td.col-habit{
+    position:sticky;
+    right:0;
+    z-index:3;
+    background:var(--wood-dark);
+    text-align:right;
+    min-width:170px;
+  }
+  td.col-habit{ background:var(--paper-alt); z-index:1; }
+  thead th.col-habit{ z-index:4; }
+
+  tbody tr:nth-child(even) td:not(.col-habit){ background:#EFE3CB; }
+  tbody tr:nth-child(odd) td:not(.col-habit){ background:var(--paper); }
+
+  td{
+    border:1px solid var(--paper-line);
+    padding:0;
+    text-align:center;
+    vertical-align:middle;
+    font-size:13px;
+  }
+
+  .cell-input{
+    width:100%;
+    border:none;
+    background:transparent;
+    padding:9px 8px;
+    font-family:'Cairo',sans-serif;
+    font-size:13px;
+    color:var(--ink);
+    outline:none;
+  }
+  .cell-input:focus{ background:#fff; }
+  td.col-habit .cell-input{ font-weight:700; }
+
+  .day-cell{
+    width:34px;
+    height:38px;
+    cursor:pointer;
+    user-select:none;
+    font-size:15px;
+    color:transparent;
+    transition:background .12s ease;
+  }
+  .day-cell:hover{ background:rgba(63,107,74,0.12); }
+  .day-cell.done{
+    background:var(--stamp-bg);
+    color:var(--stamp);
+    font-weight:700;
+  }
+
+  .summary-cell{
+    min-width:110px;
+    padding:6px 8px;
+  }
+  .summary-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    align-items:center;
+  }
+  .summary-pct{
+    font-weight:700;
+    font-size:13px;
+    color:var(--ink);
+  }
+  .summary-bar{
+    width:90%;
+    height:6px;
+    background:var(--paper-line);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .summary-fill{
+    height:100%;
+    background:var(--stamp);
+    border-radius:4px;
+    transition:width .2s ease;
+  }
+
+  .del-btn{
+    background:transparent;
+    border:none;
+    color:var(--danger);
+    font-size:15px;
+    cursor:pointer;
+    padding:4px 6px;
+    border-radius:6px;
+  }
+  .del-btn:hover{ background:rgba(139,58,58,0.12); }
+
+  .col-actions{ width:40px; }
+
+  .empty-state{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .empty-state p{ margin:0 0 16px; font-size:15px; }
+
+  footer{
+    text-align:center;
+    color:#B8A488;
+    font-size:12px;
+    margin-top:16px;
+  }
+
+  ::-webkit-scrollbar{ height:10px; }
+  ::-webkit-scrollbar-thumb{ background:var(--wood-light); border-radius:6px; }
+  ::-webkit-scrollbar-track{ background:var(--wood-dark); }
+
+  @media (max-width:600px){
+    header h1{ font-size:26px; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .add-btn{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>سجل متابعة العادات الشهري</h1>
+    <p>سبورتك الشخصية لمتابعة عاداتك يوماً بيوم</p>
+  </header>
+
+  <div class="toolbar">
+    <span class="month-badge" id="monthBadge"></span>
+    <button class="add-btn" id="addHabitBtn">+ إضافة عادة</button>
+  </div>
+
+  <div class="board">
+    <div class="table-scroll" id="tableContainer"></div>
+  </div>
+
+  <footer>البيانات تُحفظ تلقائياً في متصفحك ولا تُرسل إلى أي مكان</footer>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'habitTrackerData_v1';
+  const weekdayLetters = ['ح','ن','ث','ر','خ','ج','س']; // Sun..Sat
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const monthNames = ['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  let habits = loadData();
+
+  function loadData(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      const parsed = JSON.parse(raw);
+      // reset if stored month differs from current month, keep habit names but clear checks
+      if(parsed.year === year && parsed.month === month){
+        return parsed.habits || [];
+      } else {
+        return (parsed.habits || []).map(h => ({...h, days:{}}));
+      }
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveData(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ year, month, habits }));
+  }
+
+  function uid(){
+    return 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  }
+
+  function addHabit(){
+    habits.push({ id: uid(), name:'', goal:'', notes:'', days:{} });
+    saveData();
+    render();
+    const firstInput = document.querySelector(`tr[data-id="${habits[habits.length-1].id}"] .name-input`);
+    if(firstInput) firstInput.focus();
+  }
+
+  function deleteHabit(id){
+    habits = habits.filter(h => h.id !== id);
+    saveData();
+    render();
+  }
+
+  function toggleDay(id, day){
+    const h = habits.find(x => x.id === id);
+    if(!h) return;
+    if(h.days[day]) delete h.days[day];
+    else h.days[day] = true;
+    saveData();
+    render();
+  }
+
+  function updateField(id, field, value){
+    const h = habits.find(x => x.id === id);
+    if(!h) return;
+    h[field] = value;
+    saveData();
+  }
+
+  function completionPct(h){
+    const done = Object.keys(h.days).length;
+    return Math.round((done / daysInMonth) * 100);
+  }
+
+  function render(){
+    document.getElementById('monthBadge').textContent = `${monthNames[month]} ${year} — ${daysInMonth} يوماً`;
+
+    const container = document.getElementById('tableContainer');
+
+    if(habits.length === 0){
+      container.innerHTML = `
+        <div class="empty-state">
+          <p>لا توجد عادات بعد. أضف أول عادة لتبدأ متابعتها يومياً.</p>
+          <button class="add-btn" onclick="window.__addHabit()">+ إضافة عادة</button>
+        </div>`;
+      return;
+    }
+
+    let dayHeaders = '';
+    for(let d = 1; d <= daysInMonth; d++){
+      const wd = new Date(year, month, d).getDay();
+      dayHeaders += `<th>${d}<span class="wk">${weekdayLetters[wd]}</span></th>`;
+    }
+
+    let rows = '';
+    habits.forEach(h => {
+      let dayCells = '';
+      for(let d = 1; d <= daysInMonth; d++){
+        const done = !!h.days[d];
+        dayCells += `<td class="day-cell${done ? ' done' : ''}" data-id="${h.id}" data-day="${d}" onclick="window.__toggleDay('${h.id}', ${d})">${done ? '✓' : ''}</td>`;
+      }
+      const pct = completionPct(h);
+      rows += `
+        <tr data-id="${h.id}">
+          <td class="col-habit">
+            <input class="cell-input name-input" placeholder="اسم العادة" value="${escapeHtml(h.name)}"
+              onchange="window.__updateField('${h.id}','name',this.value)">
+          </td>
+          <td>
+            <input class="cell-input" placeholder="الهدف اليومي" value="${escapeHtml(h.goal)}"
+              onchange="window.__updateField('${h.id}','goal',this.value)">
+          </td>
+          <td>
+            <input class="cell-input" placeholder="ملاحظات" value="${escapeHtml(h.notes)}"
+              onchange="window.__updateField('${h.id}','notes',this.value)">
+          </td>
+          ${dayCells}
+          <td class="summary-cell">
+            <div class="summary-wrap">
+              <span class="summary-pct">${pct}%</span>
+              <div class="summary-bar"><div class="summary-fill" style="width:${pct}%"></div></div>
+            </div>
+          </td>
+          <td class="col-actions">
+            <button class="del-btn" title="حذف العادة" onclick="window.__deleteHabit('${h.id}')">🗑</button>
+          </td>
+        </tr>`;
+    });
+
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th class="col-habit">العادة</th>
+            <th>الهدف اليومي</th>
+            <th>ملاحظات</th>
+            ${dayHeaders}
+            <th>الإنجاز</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function escapeHtml(str){
+    if(!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // expose handlers used by inline onclick/onchange
+  window.__addHabit = addHabit;
+  window.__deleteHabit = deleteHabit;
+  window.__toggleDay = toggleDay;
+  window.__updateField = updateField;
+
+  document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+
+  render();
+})();
+</script>
+
+</body>
+</html>
